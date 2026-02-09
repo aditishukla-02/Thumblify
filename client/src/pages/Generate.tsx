@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -6,13 +6,14 @@ import {
   type AspectRatio,
   type IThumbnail,
   type ThumbnailStyle,
-  type ColorScheme,
+  dummyThumbnails,
 } from "../assets/assets";
 
 import SoftBackdrop from "../components/SoftBackdrop";
 import AspectRatioSelector from "../components/AspectRatioSelector";
 import StyleSelector from "../components/StyleSelector";
 import ColorSchemeSelector from "../components/ColorSchemeSelector";
+import PreviewPanel from "../components/PreviewPanel";
 
 const Generate = () => {
   const { id } = useParams();
@@ -23,12 +24,34 @@ const Generate = () => {
   const [loading, setLoading] = useState(false);
 
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
-  const [colorSchemeId, setColorSchemeId] = useState<ColorScheme>(
-    colorSchemes[0].id
+  const [colorSchemeId, setColorSchemeId] = useState(
+    colorSchemes[0]?.id ?? ""
   );
   const [style, setStyle] = useState<ThumbnailStyle>("Bold & Graphic");
-
   const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
+
+  const handleGenerate = async () => {
+    // generation logic later
+  };
+
+  const fetchThumbnail = async () => {
+    if (!id) return;
+
+    const thumbnail = dummyThumbnails.find((t) => t._id === id);
+    if (!thumbnail) return;
+
+    setThumbnail(thumbnail);
+    setTitle(thumbnail.title);
+    setAdditionalDetails(thumbnail.user_prompt);
+    setColorSchemeId(thumbnail.color_scheme);
+    setAspectRatio(thumbnail.aspect_ratio);
+    setStyle(thumbnail.style);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchThumbnail();
+  }, [id]);
 
   return (
     <>
@@ -77,13 +100,11 @@ const Generate = () => {
                     </div>
                   </div>
 
-                  {/* ASPECT RATIO */}
                   <AspectRatioSelector
                     value={aspectRatio}
                     onChange={setAspectRatio}
                   />
 
-                  {/* STYLE SELECTOR */}
                   <StyleSelector
                     value={style}
                     onChange={setStyle}
@@ -91,13 +112,13 @@ const Generate = () => {
                     setIsOpen={setStyleDropdownOpen}
                   />
 
-                  {/* COLOR SCHEME */}
-                  <ColorSchemeSelector
-                    value={colorSchemeId}
-                    onChange={setColorSchemeId}
-                  />
+                  {colorSchemeId && (
+                    <ColorSchemeSelector
+                      value={colorSchemeId}
+                      onChange={(scheme) => setColorSchemeId(scheme.id)}
+                    />
+                  )}
 
-                  {/* ADDITIONAL DETAILS */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-zinc-200">
                       Additional Prompts{" "}
@@ -106,9 +127,7 @@ const Generate = () => {
 
                     <textarea
                       value={additionalDetails}
-                      onChange={(e) =>
-                        setAdditionalDetails(e.target.value)
-                      }
+                      onChange={(e) => setAdditionalDetails(e.target.value)}
                       rows={3}
                       placeholder="Add any specific elements, mood, or style preferences..."
                       className="w-full px-4 py-3 rounded-lg border border-white/10 bg-black/20
@@ -116,28 +135,34 @@ const Generate = () => {
                       focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
                     />
                   </div>
-
                 </div>
 
                 {!id && (
                   <button
-                    disabled={loading}
+                    onClick={handleGenerate}
                     className="text-[15px] w-full py-3.5 rounded-xl font-medium
                     bg-gradient-to-b from-pink-500 to-pink-600
                     hover:from-pink-600 hover:to-pink-700
-                    disabled:opacity-60 disabled:cursor-not-allowed
                     transition-colors"
                   >
                     {loading ? "Generating..." : "Generate Thumbnail"}
                   </button>
                 )}
-
               </div>
             </div>
 
             {/* RIGHT PANEL */}
             <div>
-              {/* preview goes here */}
+              <div className="p-6 rounded-2xl bg-white/10 border border-white/10 shadow-xl">
+                <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+                  Preview
+                </h2>
+                <PreviewPanel
+                  thumbnail={thumbnail}
+                  isLoading={loading}
+                  aspectRatio={aspectRatio}
+                />
+              </div>
             </div>
 
           </div>
